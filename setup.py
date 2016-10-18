@@ -15,6 +15,7 @@ setup(
     },
     install_requires=[
         'six',
-        'pychromecast'
+        'pychromecast',
+        'readchar'
     ],
 )

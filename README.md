@@ -4,11 +4,28 @@ caster
 Caster is a command line tool for casting media to chromecast.
 Currently support python 2.7 and 3.5.
 
+How to use
+-----------
+
+```
+caster /file/to/play.mp4
+```
+
+### Player control
+
+```
+space -> toggle between space and pause.
+up -> volume up.
+down -> volume down.
+s -> stop.
+```
+
 Dependencies
 ------------
 
 * pychromecast
 * six
+* readchar
 
 Install
 -------

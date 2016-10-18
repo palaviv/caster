@@ -5,9 +5,10 @@ except ImportError:
     from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
 import threading
 import socket
-from six import b
 
+from six import b
 import pychromecast
+import readchar
 
 
 def get_internal_ip(dst_ip):
@@ -45,6 +46,23 @@ class RequestHandler(BaseHTTPRequestHandler):
         self.wfile.write(b("\r\n\r\n"))
 
 
+def handle_input(server_thread, dev, mc):
+    while server_thread.is_alive():
+        key = readchar.readkey()
+        if key in [readchar.key.CTRL_C, "s"]:
+            mc.stop()
+            return
+        elif key == readchar.key.SPACE:
+            if mc.status.player_is_playing:
+                mc.pause()
+            else:
+                mc.play()
+        elif key == readchar.key.UP:
+            dev.volume_up()
+        elif key == readchar.key.DOWN:
+            dev.volume_down()
+
+
 def get_args():
     parser = argparse.ArgumentParser(description='Caster - cast media to chromecast')
     parser.add_argument('file', help='The file to play')
@@ -70,6 +88,8 @@ def main():
 
     media_url = "http://{IP}:{PORT}/{URI}".format(IP=server_ip, PORT=server.server_port, URI=file_path)
     mc.play_media(media_url, 'video/mp4')
+
+    handle_input(server_thread, dev, mc)
 
     server_thread.join()
     server.server_close()
