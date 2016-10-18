@@ -66,6 +66,9 @@ def handle_input(server_thread, dev, mc):
 def get_args():
     parser = argparse.ArgumentParser(description='Caster - cast media to chromecast')
     parser.add_argument('file', help='The file to play')
+    parser.add_argument('--device', help='The chromecast device to use.'
+                                         ' When not given first one found is used.',
+                        default=None)
     return parser.parse_args()
 
 
@@ -74,7 +77,12 @@ def main():
 
     file_path = args.file
 
-    name, dev = pychromecast.get_chromecasts_as_dict().popitem()
+    device_name = args.device
+
+    if device_name:
+        dev = pychromecast.get_chromecasts_as_dict()[device_name]
+    else:
+        _, dev = pychromecast.get_chromecasts_as_dict().popitem()
 
     dev.wait()
 

@@ -9,6 +9,8 @@ How to use
 
 ```
 caster /file/to/play.mp4
+
+caster /file/to/play.mp4 --device ChromcastName
 ```
 
 ### Player control
