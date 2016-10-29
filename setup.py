@@ -3,7 +3,7 @@ from setuptools import setup
 
 setup(
     name="caster",
-    version="0.1",
+    version="0.2a",
     py_modules=['caster'],
     author="Aviv Palivoda",
     author_email="palaviv@gmail.com",
