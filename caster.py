@@ -122,7 +122,7 @@ def main():
 
     if subs:
         sub_server_thread.join()
-        sub_server.close()
+        sub_server.server_close()
 
 if __name__ == "__main__":
     main()
