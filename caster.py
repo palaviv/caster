@@ -5,6 +5,7 @@ except ImportError:
     from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
 import threading
 import socket
+import os
 
 from six import b
 import pychromecast
@@ -95,7 +96,7 @@ def main():
     mc = dev.media_controller
 
     media_url = "http://{IP}:{PORT}/{URI}".format(IP=server_ip, PORT=server.server_port, URI=file_path)
-    mc.play_media(media_url, 'video/mp4')
+    mc.play_media(media_url, 'video/mp4', title=os.path.basename(file_path))
 
     handle_input(server_thread, dev, mc)
 
