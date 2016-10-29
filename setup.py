@@ -10,6 +10,7 @@ setup(
     description="Caster is a command line tool for casting media to chromecast",
     license="MIT",
     url="https://github.com/palaviv/caster",
+    download_url="https://github.com/palaviv/caster/tarball/0.1",
     entry_points={
         'console_scripts': ['caster=caster:main'],
     },

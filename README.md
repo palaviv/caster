@@ -34,8 +34,7 @@ Dependencies
 Install
 -------
 
-1. Download the repository from https://github.com/palaviv/caster.
-2. Run `python setup.py install`.
+1. pip install caster
 
 
 Development
