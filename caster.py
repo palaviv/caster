@@ -47,6 +47,10 @@ class RequestHandler(BaseHTTPRequestHandler):
         self.wfile.write(b("\r\n\r\n"))
 
 
+class SubRequestHandler(RequestHandler):
+    content_type = "text/vtt"
+
+
 def handle_input(server_thread, dev, mc):
     while server_thread.is_alive():
         key = readchar.readkey()
@@ -70,6 +74,7 @@ def get_args():
     parser.add_argument('--device', help='The chromecast device to use.'
                                          ' When not given first one found is used.',
                         default=None)
+    parser.add_argument('--subtitles', help='subtitles', default=None)
     return parser.parse_args()
 
 
@@ -79,6 +84,8 @@ def main():
     file_path = args.file
 
     device_name = args.device
+
+    subs = args.subtitles
 
     if device_name:
         dev = pychromecast.get_chromecasts_as_dict()[device_name]
@@ -93,15 +100,29 @@ def main():
     server_thread = threading.Thread(target=server.handle_request)
     server_thread.start()
 
+    if subs:
+        sub_server = HTTPServer((server_ip, 0), SubRequestHandler)
+        sub_server_thread = threading.Thread(target=sub_server.handle_request)
+        sub_server_thread.start()
+        subtitles_url = "http://{IP}:{PORT}/{URI}".format(IP=server_ip, PORT=sub_server.server_port, URI=subs)
+    else:
+        subtitles_url = None
+
     mc = dev.media_controller
 
     media_url = "http://{IP}:{PORT}/{URI}".format(IP=server_ip, PORT=server.server_port, URI=file_path)
-    mc.play_media(media_url, 'video/mp4', title=os.path.basename(file_path))
+    mc.play_media(media_url, 'video/mp4', title=os.path.basename(file_path), subtitles=subtitles_url)
+    mc.update_status(blocking=True)
+    mc.enable_subtitle(1)
 
     handle_input(server_thread, dev, mc)
 
     server_thread.join()
     server.server_close()
+
+    if subs:
+        sub_server_thread.join()
+        sub_server.close()
 
 if __name__ == "__main__":
     main()

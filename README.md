@@ -11,6 +11,8 @@ How to use
 caster /file/to/play.mp4
 
 caster /file/to/play.mp4 --device ChromcastName
+
+caster /file/to/play.mp4 --subtitles /path/to/subtitles.vtt
 ```
 
 ### Player control
