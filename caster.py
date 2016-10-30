@@ -110,6 +110,7 @@ def get_args():
                                          ' When not given first one found is used.',
                         default=None)
     parser.add_argument('--subtitles', help='subtitles', default=None)
+    parser.add_argument('--seek', help='media starting position in seconds', default=0)
     return parser.parse_args()
 
 
@@ -117,10 +118,9 @@ def main():
     args = get_args()
 
     file_path = args.file
-
     device_name = args.device
-
     subs = args.subtitles
+    seek = args.seek
 
     if device_name:
         dev = pychromecast.get_chromecasts_as_dict()[device_name]
@@ -146,7 +146,8 @@ def main():
     mc = dev.media_controller
 
     media_url = "http://{IP}:{PORT}/{URI}".format(IP=server_ip, PORT=server.server_port, URI=file_path)
-    mc.play_media(media_url, 'video/mp4', title=os.path.basename(file_path), subtitles=subtitles_url)
+    mc.play_media(media_url, 'video/mp4', title=os.path.basename(file_path), subtitles=subtitles_url,
+                  current_time=seek)
     mc.update_status(blocking=True)
     mc.enable_subtitle(1)
 
