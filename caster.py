@@ -7,6 +7,7 @@ import threading
 import socket
 import os
 from socketserver import ThreadingMixIn
+import mimetypes
 
 import pychromecast
 import readchar
@@ -18,8 +19,10 @@ def get_internal_ip(dst_ip):
     return s.getsockname()[0]
 
 
+mimetypes.add_type("text/vtt", ".vtt")
+
+
 class RequestHandler(BaseHTTPRequestHandler):
-    content_type = "video/mp4"
     chunk_size = 1024
 
     """ Handle HTTP requests for files which do not need transcoding """
@@ -31,6 +34,8 @@ class RequestHandler(BaseHTTPRequestHandler):
 
     def do_GET(self):
         self.protocol_version = "HTTP/1.1"
+        content_type = mimetypes.guess_type(self.path)
+        print(self.path, content_type)
 
         with open(self.path, "rb") as f:
             f.seek(0, 2)
@@ -46,7 +51,7 @@ class RequestHandler(BaseHTTPRequestHandler):
                 self.send_response(200)
                 start_range, end_range = 0, file_size
             self.send_header('Content-Length', end_range - start_range + 1)
-            self.send_header("Content-type", self.content_type)
+            self.send_header("Content-type", content_type[0])
             self.send_header('Access-Control-Allow-Origin', '*')
             self.end_headers()
 
@@ -70,10 +75,6 @@ class RequestHandler(BaseHTTPRequestHandler):
             return BaseHTTPRequestHandler.handle_one_request(self)
         except socket.error:
             pass
-
-
-class SubRequestHandler(RequestHandler):
-    content_type = "text/vtt"
 
 
 class ThreadedHTTPServer(ThreadingMixIn, HTTPServer):
@@ -135,16 +136,12 @@ def main():
     server_thread = threading.Thread(target=server.serve_forever)
     server_thread.start()
 
-    if subs:
-        sub_server = HTTPServer((server_ip, 0), SubRequestHandler)
-        sub_server_thread = threading.Thread(target=sub_server.handle_request)
-        sub_server_thread.start()
-        subtitles_url = "http://{IP}:{PORT}/{URI}".format(IP=server_ip, PORT=sub_server.server_port, URI=subs)
-    else:
-        subtitles_url = None
-
     mc = dev.media_controller
 
+    if subs:
+        subtitles_url = "http://{IP}:{PORT}/{URI}".format(IP=server_ip, PORT=server.server_port, URI=subs)
+    else:
+        subtitles_url = None
     media_url = "http://{IP}:{PORT}/{URI}".format(IP=server_ip, PORT=server.server_port, URI=file_path)
     mc.play_media(media_url, 'video/mp4', title=os.path.basename(file_path), subtitles=subtitles_url,
                   current_time=seek)
@@ -156,10 +153,6 @@ def main():
     server.shutdown()
     server_thread.join()
     server.server_close()
-
-    if subs:
-        sub_server_thread.join()
-        sub_server.server_close()
 
 if __name__ == "__main__":
     main()
