@@ -6,8 +6,8 @@ except ImportError:
 import threading
 import socket
 import os
+from socketserver import ThreadingMixIn
 
-from six import b
 import pychromecast
 import readchar
 
@@ -20,35 +20,64 @@ def get_internal_ip(dst_ip):
 
 class RequestHandler(BaseHTTPRequestHandler):
     content_type = "video/mp4"
+    chunk_size = 1024
 
     """ Handle HTTP requests for files which do not need transcoding """
 
+    def parse_range(self, file_size):
+        start = self.headers["range"].split("=")[1].split("-")[0]
+        end = file_size - 1
+        return int(start), int(end)
+
     def do_GET(self):
         self.protocol_version = "HTTP/1.1"
-        self.send_response(200)
-        self.send_header("Content-type", self.content_type)
-        self.send_header('Access-Control-Allow-Origin', '*')
-        self.send_header("Transfer-Encoding", "chunked")
-        self.end_headers()
 
         with open(self.path, "rb") as f:
+            f.seek(0, 2)
+            file_size = f.tell()
+
+            if "range" in self.headers:
+                self.send_response(206)
+                start_range, end_range = self.parse_range(file_size)
+                self.send_header('Content-Range', 'bytes {START}-{END}/{TOTAL}'.format(
+                    START=start_range, END=end_range, TOTAL=file_size))
+                self.send_header('Accept-Ranges', 'bytes')
+            else:
+                self.send_response(200)
+                start_range, end_range = 0, file_size
+            self.send_header('Content-Length', end_range - start_range + 1)
+            self.send_header("Content-type", self.content_type)
+            self.send_header('Access-Control-Allow-Origin', '*')
+            self.end_headers()
+
+            f.seek(start_range)
+
+            curr = start_range
+
             while True:
-                data = f.read(1024)
-                if len(data) == 0:
+                if curr + self.chunk_size > end_range:
+                    read_size = end_range - curr
+                else:
+                    read_size = self.chunk_size
+                curr += read_size
+                data = f.read(read_size)
+                self.wfile.write(data)
+                if curr == end_range:
                     break
 
-                chunk_size = "%0.2X" % len(data)
-                self.wfile.write(b(chunk_size))
-                self.wfile.write(b("\r\n"))
-                self.wfile.write(data)
-                self.wfile.write(b("\r\n"))
-
-        self.wfile.write(b("0"))
-        self.wfile.write(b("\r\n\r\n"))
+    def handle_one_request(self):
+        try:
+            return BaseHTTPRequestHandler.handle_one_request(self)
+        except socket.error:
+            pass
 
 
 class SubRequestHandler(RequestHandler):
     content_type = "text/vtt"
+
+
+class ThreadedHTTPServer(ThreadingMixIn, HTTPServer):
+    pass
 
 
 def handle_input(server_thread, dev, mc):
@@ -66,6 +95,12 @@ def handle_input(server_thread, dev, mc):
             dev.volume_up()
         elif key == readchar.key.DOWN:
             dev.volume_down()
+        elif key == readchar.key.RIGHT:
+            mc.update_status(blocking=True)
+            mc.seek(mc.status.current_time + 30)
+        elif key == readchar.key.LEFT:
+            mc.update_status(blocking=True)
+            mc.seek(mc.status.current_time - 30)
 
 
 def get_args():
@@ -96,8 +131,8 @@ def main():
 
     server_ip = get_internal_ip(dev.host)
 
-    server = HTTPServer((server_ip, 0), RequestHandler)
-    server_thread = threading.Thread(target=server.handle_request)
+    server = ThreadedHTTPServer((server_ip, 0), RequestHandler)
+    server_thread = threading.Thread(target=server.serve_forever)
     server_thread.start()
 
     if subs:
@@ -117,6 +152,7 @@ def main():
 
     handle_input(server_thread, dev, mc)
 
+    server.shutdown()
     server_thread.join()
     server.server_close()
 

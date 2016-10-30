@@ -15,7 +15,6 @@ setup(
         'console_scripts': ['caster=caster:main'],
     },
     install_requires=[
-        'six',
         'pychromecast',
         'readchar'
     ],

@@ -18,9 +18,11 @@ caster /file/to/play.mp4 --subtitles /path/to/subtitles.vtt
 ### Player control
 
 ```
-space -> toggle between space and pause.
+space -> toggle between play and pause.
 up -> volume up.
 down -> volume down.
+right -> jump 30 seconds forward.
+left -> jump 30 seconds backwards.
 s -> stop.
 ```
 
@@ -28,7 +30,6 @@ Dependencies
 ------------
 
 * pychromecast
-* six
 * readchar
 
 Install
