@@ -35,7 +35,6 @@ class RequestHandler(BaseHTTPRequestHandler):
     def do_GET(self):
         self.protocol_version = "HTTP/1.1"
         content_type = mimetypes.guess_type(self.path)
-        print(self.path, content_type)
 
         with open(self.path, "rb") as f:
             f.seek(0, 2)
@@ -102,6 +101,11 @@ def handle_input(server_thread, dev, mc):
         elif key == readchar.key.LEFT:
             mc.update_status(blocking=True)
             mc.seek(mc.status.current_time - 30)
+        elif key == "m":
+            if dev.status.volume_muted:
+                dev.set_volume_muted(False)
+            else:
+                dev.set_volume_muted(True)
 
 
 def get_args():

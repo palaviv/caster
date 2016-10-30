@@ -24,6 +24,7 @@ down -> volume down.
 right -> jump 30 seconds forward.
 left -> jump 30 seconds backwards.
 s -> stop.
+m -> toggle between mute and unmute.
 ```
 
 Dependencies
