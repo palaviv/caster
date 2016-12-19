@@ -134,7 +134,11 @@ def main():
 
     dev.wait()
 
-    server_ip = get_internal_ip(dev.host)
+    try:
+        server_ip = get_internal_ip(dev.host)
+    except Exception:
+        # See https://github.com/palaviv/caster/issues/1
+        server_ip = "0.0.0.0"
 
     server = ThreadedHTTPServer((server_ip, 0), RequestHandler)
     server_thread = threading.Thread(target=server.serve_forever)
