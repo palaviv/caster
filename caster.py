@@ -19,6 +19,18 @@ def get_internal_ip(dst_ip):
     return s.getsockname()[0]
 
 
+def get_seek_time(time_str):
+    time_splited = time_str.split(':')
+    time = 0
+    if len(time_splited) >= 1:
+        time += int(time_splited[-1])
+    if len(time_splited) >= 2:
+        time += 60 * int(time_splited[-2])
+    if len(time_splited) >= 3:
+        time += 3600 * int(time_splited[-3])
+    return time
+
+
 mimetypes.add_type("text/vtt", ".vtt")
 
 
@@ -115,7 +127,7 @@ def get_args():
                                          ' When not given first one found is used.',
                         default=None)
     parser.add_argument('--subtitles', help='subtitles', default=None)
-    parser.add_argument('--seek', help='media starting position in seconds', default=0)
+    parser.add_argument('--seek', help='media starting position in HH:MM:SS format', default=0)
     return parser.parse_args()
 
 
@@ -125,7 +137,7 @@ def main():
     file_path = args.file
     device_name = args.device
     subs = args.subtitles
-    seek = args.seek
+    seek = get_seek_time(args.seek)
 
     if device_name:
         dev = pychromecast.get_chromecasts_as_dict()[device_name]

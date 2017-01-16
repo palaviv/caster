@@ -13,6 +13,8 @@ caster /file/to/play.mp4
 caster /file/to/play.mp4 --device ChromcastName
 
 caster /file/to/play.mp4 --subtitles /path/to/subtitles.vtt
+
+caster /file/to/play.mp4 --seek 1:25:43
 ```
 
 ### Player control
