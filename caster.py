@@ -127,7 +127,7 @@ def get_args():
                                          ' When not given first one found is used.',
                         default=None)
     parser.add_argument('--subtitles', help='subtitles', default=None)
-    parser.add_argument('--seek', help='media starting position in HH:MM:SS format', default=0)
+    parser.add_argument('--seek', help='media starting position in HH:MM:SS format', default="00:00:00")
     return parser.parse_args()
 
 
