@@ -108,10 +108,10 @@ def handle_input(server_thread, dev, mc):
         elif key == readchar.key.DOWN:
             dev.volume_down()
         elif key == readchar.key.RIGHT:
-            mc.update_status(blocking=True)
+            mc.update_status()
             mc.seek(mc.status.current_time + 30)
         elif key == readchar.key.LEFT:
-            mc.update_status(blocking=True)
+            mc.update_status()
             mc.seek(mc.status.current_time - 30)
         elif key == "m":
             if dev.status.volume_muted:
@@ -139,10 +139,12 @@ def main():
     subs = args.subtitles
     seek = get_seek_time(args.seek)
 
+    chromecasts = pychromecast.get_chromecasts()
+
     if device_name:
-        dev = pychromecast.get_chromecasts_as_dict()[device_name]
+        dev = next(cc for cc in chromecasts if cc.device.friendly_name == device_name)
     else:
-        _, dev = pychromecast.get_chromecasts_as_dict().popitem()
+        dev = chromecasts[0]
 
     dev.wait()
 
@@ -165,7 +167,7 @@ def main():
     media_url = "http://{IP}:{PORT}/{URI}".format(IP=server_ip, PORT=server.server_port, URI=file_path)
     mc.play_media(media_url, 'video/mp4', title=os.path.basename(file_path), subtitles=subtitles_url,
                   current_time=seek)
-    mc.update_status(blocking=True)
+    mc.update_status()
     mc.enable_subtitle(1)
 
     handle_input(server_thread, dev, mc)
